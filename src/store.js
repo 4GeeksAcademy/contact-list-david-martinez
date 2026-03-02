@@ -1,7 +1,7 @@
 export const initialStore = () => {
   return {
     message: null,
-    contacts: [], // Aquí guardaremos la lista que viene de la API de 4Geeks
+    contacts: [], // Lista global de contactos cargados desde la API
     todos: [
       { id: 1, title: "Make the bed", background: null },
       { id: 2, title: "Do my homework", background: null }
@@ -29,6 +29,13 @@ export default function storeReducer(store, action = {}) {
         contacts: action.payload 
       };
 
+    // ---AGREGAR CONTACTO ---
+    case 'add_contact':
+      return {
+        ...store,
+        contacts: [...store.contacts, action.payload]
+      };
+
     // ---ELIMINAR CONTACTO ---
     case 'delete_contact':
       return {
@@ -36,6 +43,15 @@ export default function storeReducer(store, action = {}) {
         // Filtro el array: me quedo con todos MENOS con el ID que quiero borrar
         // Esto actualiza la interfaz automáticamente sin recargar
         contacts: store.contacts.filter((c) => c.id !== action.payload)
+      };
+
+    // ---ACTUALIZAR CONTACTO ---
+    case 'update_contact':
+      return {
+        ...store,
+        contacts: store.contacts.map((contact) =>
+          contact.id === action.payload.id ? action.payload : contact
+        )
       };
 
     default:
