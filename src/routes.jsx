@@ -5,8 +5,6 @@ import {
 } from "react-router-dom";
 import { Layout } from "./pages/Layout";
 import { Home } from "./pages/Home";
-import { Single } from "./pages/Single";
-import { Demo } from "./pages/Demo";
 import { EditContact } from "./pages/EditContact";
 import { AddContact } from "./pages/AddContact"; 
 
@@ -15,8 +13,6 @@ export const router = createBrowserRouter(
       <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>} >
 
         <Route path= "/" element={<Home />} />
-        <Route path="/single/:theId" element={ <Single />} />
-        <Route path="/demo" element={<Demo />} />
         <Route path="/edit/:id" element={<EditContact />} />
         <Route path="/add" element={<AddContact />} />
       </Route>
