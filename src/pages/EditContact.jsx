@@ -1,114 +1,113 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { ContactForm } from "../components/ContactForm";
 import useStore from "../hooks/useGlobalReducer";
 import { CONTACTS_ENDPOINT } from "../config";
+import { EMPTY_CONTACT, normalizeContact } from "../utils/contactForm";
 
 export const EditContact = () => {
     const { id } = useParams();
     const { store } = useStore();
     const navigate = useNavigate();
-    const [contact, setContact] = useState({ name: "", email: "", phone: "", address: "" });
+    const [contact, setContact] = useState(EMPTY_CONTACT);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
 
     useEffect(() => {
+        let isMounted = true;
+
         const load = async () => {
-            // Buscamos primero en el store global
-            const inStore = store.contacts.find(c => c.id === parseInt(id));
+            const parsedId = Number(id);
+
+            if (Number.isNaN(parsedId)) {
+                if (isMounted) {
+                    setLoadError("The selected contact is invalid.");
+                    setLoading(false);
+                }
+                return;
+            }
+
+            const inStore = store.contacts.find((storedContact) => storedContact.id === parsedId);
             if (inStore) {
-                setContact(inStore);
-            } else {
-                // Si no está (por un refresh), se pide a la API
-                try {
-                    const res = await fetch(`${CONTACTS_ENDPOINT}/${id}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setContact(data);
-                    }
-                } catch (e) { 
-                    console.error("Error loading contact from API:", e); 
+                if (isMounted) {
+                    setContact(normalizeContact(inStore));
+                    setLoading(false);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONTACTS_ENDPOINT}/${id}`);
+                if (!response.ok) {
+                    throw new Error("The contact could not be loaded.");
+                }
+
+                const data = await response.json();
+                if (isMounted) {
+                    setContact(normalizeContact(data));
+                }
+            } catch (error) {
+                if (isMounted) {
+                    setLoadError(
+                        error instanceof Error ? error.message : "The contact could not be loaded."
+                    );
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
                 }
             }
-            setLoading(false);
         };
+
         load();
+
+        return () => {
+            isMounted = false;
+        };
     }, [id, store.contacts]);
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        const updated = {
-            name: contact.name.trim(),
-            email: contact.email.trim(),
-            phone: contact.phone.trim(),
-            address: contact.address.trim()
-        };
-        try {
-            const res = await fetch(`${CONTACTS_ENDPOINT}/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updated)
-            });
-            if (res.ok) navigate("/");
-        } catch (e) { 
-            console.error("Error updating contact:", e); 
+    const handleUpdate = async (updatedContact) => {
+        const response = await fetch(`${CONTACTS_ENDPOINT}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedContact),
+        });
+
+        if (!response.ok) {
+            throw new Error("The contact could not be updated.");
         }
+
+        navigate("/");
     };
 
-    if (loading) return (
-        <div className="text-center mt-5">
-            <div className="spinner-border text-success" role="status"></div>
-            <h2 className="text-success mt-2">Loading contact details...</h2>
-        </div>
-    );
+    if (loading) {
+        return (
+            <div className="text-center mt-5">
+                <div className="spinner-border text-success" role="status"></div>
+                <h2 className="text-success mt-2">Loading contact details...</h2>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="container mt-5">
+                <div className="alert alert-danger shadow-sm" role="alert">
+                    {loadError}
+                </div>
+                <Link to="/" className="btn btn-outline-success">
+                    Return to contacts
+                </Link>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mt-5">
-            <h1 className="text-success text-center mb-4">Update Contact Info</h1>
-            <form onSubmit={handleUpdate} className="bg-white p-4 rounded shadow border border-success-subtle">
-                <div className="mb-3">
-                    <label className="form-label text-success fw-bold">Full Name</label>
-                    <input 
-                        type="text" 
-                        className="form-control" 
-                        value={contact.name} 
-                        onChange={e => setContact({...contact, name: e.target.value})} 
-                        required 
-                    />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label text-success fw-bold">Email</label>
-                    <input 
-                        type="email" 
-                        className="form-control" 
-                        value={contact.email} 
-                        onChange={e => setContact({...contact, email: e.target.value})} 
-                        required 
-                    />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label text-success fw-bold">Phone</label>
-                    <input 
-                        type="text" 
-                        className="form-control" 
-                        value={contact.phone} 
-                        onChange={e => setContact({...contact, phone: e.target.value})} 
-                        required 
-                    />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label text-success fw-bold">Address</label>
-                    <input 
-                        type="text" 
-                        className="form-control" 
-                        value={contact.address} 
-                        onChange={e => setContact({...contact, address: e.target.value})} 
-                        required 
-                    />
-                </div>
-                <button type="submit" className="btn btn-success w-100 fw-bold shadow-sm">Update Contact</button>
-                <Link to="/" className="d-block text-center mt-3 text-success text-decoration-none small">
-                    Cancel and return
-                </Link>
-            </form>
-        </div>
+        <ContactForm
+            initialValues={contact}
+            title="Update Contact Info"
+            submitLabel="Update Contact"
+            onSubmit={handleUpdate}
+        />
     );
 };
