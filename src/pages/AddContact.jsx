@@ -1,101 +1,86 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { AGENDA_ENDPOINT, CONTACTS_ENDPOINT } from "../config";
 
 export const AddContact = () => {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "" });
 
-    // Estado local para capturar lo que el usuario escribe
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [phone, setPhone] = useState("");
-    const [address, setAddress] = useState("");
-
-    // Función para enviar los datos a la API
     const saveContact = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
+        const newContact = {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            address: formData.address.trim()
+        };
 
-    const newContact = {
-        name: fullName,
-        email: email,
-        phone: phone,
-        address: address
-    };
+        if (!newContact.name || !newContact.email) return alert("Name and Email are required");
 
-    try {
-        // Intentar crear la agenda por si acaso no existe
-        await fetch("https://playground.4geeks.com/contact/agendas/david_martinez", {
-            method: "POST"
-        });
-
-        // guardar el contacto
-        const response = await fetch("https://playground.4geeks.com/contact/agendas/david_martinez/contacts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newContact)
-        });
-
-        if (response.ok) {
-            navigate("/");
-        } else {
-            const errorData = await response.json();
-            console.log("Detalle del error:", errorData);
-            alert("Error al guardar: " + (errorData.detail || "revisa la consola"));
+        try {
+            // Aseguramos que la agenda exista antes de crear el contacto
+            await fetch(AGENDA_ENDPOINT, { method: "POST" }); 
+            
+            const response = await fetch(CONTACTS_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newContact)
+            });
+            
+            if (response.ok) navigate("/");
+        } catch (error) { 
+            console.error("Error saving contact:", error); 
         }
-    } catch (error) {
-        console.error("Error de red:", error);
-    }
-};
+    };
 
     return (
         <div className="container mt-5">
-            <h1 className="text-info text-center mb-4" style={{ textShadow: "0 0 10px #00d4ff" }}>Add New Contact</h1>
-            <form onSubmit={saveContact} className="bg-dark p-4 rounded shadow-lg border border-secondary">
+            <h1 className="text-success text-center mb-4">Add New Spring Contact</h1>
+            <form onSubmit={saveContact} className="bg-white p-4 rounded shadow border border-success-subtle">
                 <div className="mb-3">
-                    <label className="form-label text-info">Full Name</label>
+                    <label className="form-label text-success fw-bold">Full Name</label>
                     <input 
                         type="text" 
-                        className="form-control bg-dark text-white border-secondary" 
-                        placeholder="Full Name" 
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        className="form-control" 
+                        placeholder="Enter full name" 
+                        onChange={e => setFormData({...formData, name: e.target.value})} 
                         required 
                     />
                 </div>
                 <div className="mb-3">
-                    <label className="form-label text-info">Email</label>
+                    <label className="form-label text-success fw-bold">Email</label>
                     <input 
                         type="email" 
-                        className="form-control bg-dark text-white border-secondary" 
+                        className="form-control" 
                         placeholder="Enter email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={e => setFormData({...formData, email: e.target.value})} 
                         required 
                     />
                 </div>
                 <div className="mb-3">
-                    <label className="form-label text-info">Phone</label>
+                    <label className="form-label text-success fw-bold">Phone</label>
                     <input 
                         type="text" 
-                        className="form-control bg-dark text-white border-secondary" 
+                        className="form-control" 
                         placeholder="Enter phone" 
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={e => setFormData({...formData, phone: e.target.value})} 
                         required 
                     />
                 </div>
                 <div className="mb-3">
-                    <label className="form-label text-info">Address</label>
+                    <label className="form-label text-success fw-bold">Address</label>
                     <input 
                         type="text" 
-                        className="form-control bg-dark text-white border-secondary" 
+                        className="form-control" 
                         placeholder="Enter address" 
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={e => setFormData({...formData, address: e.target.value})} 
                         required 
                     />
                 </div>
-                <button type="submit" className="btn btn-info w-100 fw-bold shadow-sm">Save Contact</button>
-                <Link to="/" className="d-block text-center mt-3 text-muted">or get back to contacts</Link>
+                <button type="submit" className="btn btn-success w-100 fw-bold shadow-sm">Save Contact</button>
+                <Link to="/" className="d-block text-center mt-3 text-success text-decoration-none small">
+                    <i className="fas fa-arrow-left me-1"></i> get back to contacts
+                </Link>
             </form>
         </div>
     );

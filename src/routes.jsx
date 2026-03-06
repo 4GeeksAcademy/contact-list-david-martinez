@@ -1,24 +1,16 @@
-import {
-    createBrowserRouter,
-    createRoutesFromElements,
-    Route,
-} from "react-router-dom";
+import React from "react";
+import { createBrowserRouter, createRoutesFromElements, Route } from "react-router-dom";
 import { Layout } from "./pages/Layout";
 import { Home } from "./pages/Home";
-import { Single } from "./pages/Single";
-import { Demo } from "./pages/Demo";
 import { EditContact } from "./pages/EditContact";
 import { AddContact } from "./pages/AddContact"; 
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>} >
-
-        <Route path= "/" element={<Home />} />
-        <Route path="/single/:theId" element={ <Single />} />
-        <Route path="/demo" element={<Demo />} />
-        <Route path="/edit/:id" element={<EditContact />} />
-        <Route path="/add" element={<AddContact />} />
+      <Route path="/" element={<Layout />} errorElement={<div className="text-center mt-5"><h1>404 Not found!</h1></div>} >
+        <Route index element={<Home />} />
+        <Route path="edit/:id" element={<EditContact />} />
+        <Route path="add" element={<AddContact />} />
       </Route>
     )
 );
