@@ -1,5 +1,4 @@
-import React from "react";
-import { Link } from "react-router-dom"; // ESTA LÍNEA ES LA QUE FALTA
+import { Link } from "react-router-dom";
 
 export const Navbar = () => {
     return (

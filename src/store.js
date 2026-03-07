@@ -1,43 +1,58 @@
 export const initialStore = () => {
   return {
-    message: null,
-    contacts: [], 
-    todos: [
-      { id: 1, title: "Make the bed", background: null },
-      { id: 2, title: "Do my homework", background: null }
-    ]
-  }
+    contacts: [],
+    isLoadingContacts: false,
+    isSavingContact: false,
+    deletingContactId: null,
+    error: null
+  };
 }
 
-// --- REDUCER: El interruptor que decide cómo cambiar los datos ---
 export default function storeReducer(store, action = {}) {
-  switch(action.type){
-    // Caso para cambiar el color de una tarea 
-    case 'add_task':
-      const { id, color } = action.payload
+  switch (action.type) {
+    case "set_loading_contacts":
       return {
         ...store,
-        // Busco la tarea por ID y solo le cambio el color de fondo
-        todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
+        isLoadingContacts: action.payload
       };
 
-    // ---CARGAR CONTACTOS ---
-    case 'assign_contacts': 
+    case "set_saving_contact":
       return {
         ...store,
-        // Sobreescribe el array vacío con los datos reales que llegan de la API
-        contacts: action.payload 
+        isSavingContact: action.payload
       };
 
-    // ---ELIMINAR CONTACTO ---
-    case 'delete_contact':
+    case "set_deleting_contact":
       return {
         ...store,
-        // Filtro el array: me quedo con todos MENOS con el ID que quiero borrar
-        contacts: store.contacts.filter((c) => c.id !== action.payload)
+        deletingContactId: action.payload
+      };
+
+    case "set_error":
+      return {
+        ...store,
+        error: action.payload
+      };
+
+    case "clear_error":
+      return {
+        ...store,
+        error: null
+      };
+
+    case "assign_contacts":
+      return {
+        ...store,
+        contacts: action.payload
+      };
+
+    case "delete_contact":
+      return {
+        ...store,
+        contacts: store.contacts.filter((contact) => contact.id !== action.payload)
       };
 
     default:
-      return store; 
-  }    
+      return store;
+  }
 }
